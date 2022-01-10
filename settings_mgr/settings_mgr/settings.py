@@ -10,11 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
+import socket
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+STATIC_ROOT = BASE_DIR / "static"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -25,8 +28,16 @@ SECRET_KEY = 'django-insecure-lr2jq*+bm8zv@01qts8srsa#89zuc+u8js0t0axd5ew38h(&#i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# You may want to change this to be the local host IP address. This is a bit of
+# a hack to automagically do that. NOT FOR PRODUCTION!
+def my_addr():
+    ss = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # doesn't matter what this address is, so long as it's on the same
+    # external subnet you plan on connecting from.
+    ss.connect(("192.168.1.1", 1))
+    return ss.getsockname()[0]
 
+ALLOWED_HOSTS = [my_addr()]
 
 # Application definition
 
@@ -59,7 +70,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
-        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -69,6 +79,8 @@ TEMPLATES = [
             ],
             'loaders': [
                 'admin_tools.template_loaders.Loader',
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
             ]
         },
     },
@@ -123,6 +135,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = [
+    STATIC_ROOT,
+    "static",
+]
+
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
